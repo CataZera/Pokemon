@@ -15,3 +15,20 @@ A repository for developing out features I would like to make easier for when I 
       - calculates all types that deal 2x or more damage to a single typing opponent pokemon
     - functions: teraTypeCounter
       - calculates which pokemon are most defensive against a pokemon mono/dual typing and are most effective against that pokemons tera typing
+
+- [] Need to implement avoiding tera blast
+- [] Need to implement csv reader for listing pokemon effective against typing + tera
+- [] Need to implement listing all options for all defensives against typing
+     1. Neutral/Neutral
+     2. Neutral/Resistant
+     3. Neutral/Very Resistant
+     4. Neutral/No Damage
+     5. Resistant/Resistant
+     5. Resistant/Very Resistant
+     6. Resistant/No Damage
+     7. Very Resistant/Very Resistant
+     8. Very Resistant/No Damage
+     9. No Damage/No Damage
+     
+- [] Need to implement typing in tera raid pokemon and generating list of pokemon
+- [] Need to create function to determine which offensive stat is best against tera raid pokemon
