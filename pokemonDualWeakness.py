@@ -1,4 +1,4 @@
-#!/usr/bing/env python3
+#!/usr/bin/env python3
 ###Class is for a list of defined dual type weaknesses against singular types and other dual types
 
 import sys
@@ -35,6 +35,7 @@ class DualType(object):
         return damageList
 
     def monoTypeSuperEffective(self,type1):
+        #Everything type1 is weak against, gets hit with super effective attacks
         types = pokemonTypeWeakness.TypeWeakness()
         typeList = []
         t1 = getattr(types,type1.lower())
@@ -136,7 +137,7 @@ class DualType(object):
     def avoidTeraBlast(self,type1,type2,teratype,damage1,damage2):
         pass
 
-    def teraTypeCounter(self,type1,type2,teraType,damage1,damage2):
+    def teraTypeCounter(self,type1,type2,teraType,damage1,damage2,avoidTeraType=False):
         #type1/type2 is the types to defend against
         #teraType is the type we want to be most effective against
         #combine this that means we want the best defense against type1/type2, yet be strongest against teraType
@@ -152,8 +153,22 @@ class DualType(object):
         #Add check case for when avoidTeraBlast is true
         #remove the pokemon from the combo list that are weak to the tera typing
         #Return the new result of the pokemon list
-        avoidTeraBlast = []
+        if avoidTeraType:
+            index = 0
+            teraBlast = self.dualTypeWeakness(teraType,"")
+            avoidTeraBlast = []
+            for i in range(len(teraBlast)-1):
+                if type(teraBlast[i]) !=  str and teraBlast[i] > 1:
+                    avoidTeraBlast.append(teraBlast[i-1])
+            tmp = []
+            for i in avoidTeraBlast:
+                for j in combo:
+                    if i in j:
+                        tmp.append(j)
 
+            for i in tmp:
+                if i in combo:
+                    combo.remove(i)
         if(self.debug):
             print()
             if (type2 == ""):
@@ -169,23 +184,26 @@ class DualType(object):
 def main():
     dualType = DualType()
     while True:
-        type1 = input("Enter the first type or q to quit: ").lower().capitalize()
+        type1 = input("Enter the first type or q to quit: ").strip().lower().capitalize()
         if(type1 == "Q"): 
             break
-        type2 = input("Enter second type or q to quit: ").lower().capitalize()
+        type2 = input("Enter second type or q to quit: ").strip().lower().capitalize()
         if(type2 == "Q"):
             break
-        teraType = input("Tera type for pokemon: ").lower().capitalize()
+        teraType = input("Tera type for pokemon: ").strip().lower().capitalize()
         if(teraType == "Q"):
             break
         print("Chose an option for number of pokemon types to list for defensive purposes.")
-        print("1: Neutral/Neutral: damage taken is normal effectiveness with both types (1)")
-        print("2: Neutral/Resistant: damage taken is normal effectiveness (1) with first type and half effective with second (0.5)")
-        print("3: Neutral/Very Resistant: damage taken is normal effectiveness (1) with first type and quarter effective with second (0.25)")
-        print("4: Resistant/Resistant: damage taken is half effective with both types (0.5)")
-        print("5: Resistant/Very Resistant: damage taken is half effective (0.5) with first type and quarter effective with second (0.25)")
-        print("6: Very Resistant/Very Resistant: damage taken is quarter effective for both types (0.25)")
-        print("7: No damage")
+        print(" 1: Neutral/Neutral: ")
+        print(" 2: Neutral/Resistant: ")
+        print(" 3: Neutral/Very Resistant: ")
+        print(" 4: Neutral/No Damage: ")
+        print(" 5: Resistant/Resistant: ")
+        print(" 6: Resistant/Very Resistant: ")
+        print(" 7: Resistant/No Damage: ")
+        print(" 8: Very Resistant/Very Resistant: ")
+        print(" 9: Very Resistant/No Damage: ")
+        print("10: No damage ")
         try:
             defensiveness = int(input())
         except:
@@ -199,15 +217,23 @@ def main():
         elif (defensiveness == 3):
             damage2 = 0.25
         elif (defensiveness == 4):
-            damage1 = 0.5
-            damage2 = 0.5
+            damage2 = 0
         elif (defensiveness == 5):
             damage1 = 0.5
-            damage2 = 0.25
+            damage2 = 0.5
         elif (defensiveness == 6):
-            damage1 = 0.25
+            damage1 = 0.5
             damage2 = 0.25
         elif (defensiveness == 7):
+            damage1 = 0.5
+            damage2 = 0
+        elif (defensiveness == 8):
+            damage1 = 0.25
+            damage2 = 0.25
+        elif (defensiveness == 9):
+            damage1 = 0.25
+            damage2 = 0
+        elif (defensiveness == 10):
             damage1 = 0
             damage2 = 0
         if teraType != "":
