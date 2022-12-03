@@ -137,10 +137,14 @@ class DualType(object):
     def avoidTeraBlast(self,type1,type2,teratype,damage1,damage2):
         pass
 
-    def teraTypeCounter(self,type1,type2,teraType,damage1,damage2,avoidTeraType=False):
+    def teraTypeCounter(self,pokemon,teraType,damage,avoidTeraType=False):
         #type1/type2 is the types to defend against
         #teraType is the type we want to be most effective against
         #combine this that means we want the best defense against type1/type2, yet be strongest against teraType
+        type1 = pokemon[2]
+        type2 = pokemon[3]
+        damage1 = damage[0]
+        damage2 = damage[1]
         if type2 == "":
             counterDefense = self.monoTypeStrengths(type1,damage1,damage2)
         else:
@@ -237,7 +241,7 @@ def main():
             damage1 = 0
             damage2 = 0
         if teraType != "":
-            dualType.teraTypeCounter(type1,type2,teraType,damage1,damage2)
+            dualType.teraTypeCounter(["","",type1,type2],teraType,[damage1,damage2])
         else:
             if(type1 == ""):
                 type1 = type2
