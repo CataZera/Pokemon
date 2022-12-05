@@ -10,10 +10,10 @@ class DualType(object):
                  "Fighting","Poison","Ground","Flying","Psychic","Bug",
                  "Rock","Ghost","Dragon","Dark","Steel","Fairy"]
 
-    debug = True
+    debug = False
 
     def dualTypeWeakness(self,type1,type2):
-        #Everything this type is weak against
+        #Returns a list of damage that type1 + type2 can receive from all 18 typings
         types = pokemonTypeWeakness.TypeWeakness()
         t1 = getattr(types,type1.lower())
         if type2 != "":
@@ -46,10 +46,6 @@ class DualType(object):
                 dualType = i+"/"+j
                 if((t1(j)>1 or t1(i)>1) and dualType not in typeList and i != j):
                     typeList.append(dualType)
-        #if(self.debug):
-        #    print(len(typeList), " deal super effective damage to " + type1)
-        #    for i in typeList:
-        #        print(i)
         return typeList
 
     def dualTypeSuperEffective(self,type1,type2):
@@ -65,30 +61,39 @@ class DualType(object):
                 dualType = i+"/"+j
                 if((t1(j)*t2(j) > 1 or t1(i)*t2(i)>1) and dualType not in typeList and i != j):
                     typeList.append(dualType)
-        #if(self.debug):
-        #    print(len(typeList), " deal super effective damage to " + type1 + "/" + type2)
-        #    for i in typeList:
-        #        print(i)
         return typeList
 
-    def monoTypeStrengths(self,type1,damage1=0.5,damage2=0.5):
+    def monoTypeStrengths(self,type1,damage):
         #Everything type1 is not strong against, deals neutral damage or less
         types = pokemonTypeWeakness.TypeWeakness()
         typeList = []
         for i in self.typesList:
             t1 = getattr(types, i.lower())
-            if t1(type1) <= damage1 and i not in typeList:
+            if t1(type1) <= damage and i not in typeList:
                 typeList.append(i)
             for j in self.typesList:
                 t2 = getattr(types, j.lower())
                 dualType = i+"/"+j
-                if(t1(type1)*t2(type1) <= damage1 and dualType not in typeList and i != j):
+                if(t1(type1)*t2(type1) <= damage and dualType not in typeList and i != j):
                     typeList.append(dualType)
-        
-        #if(self.debug):
-        #    print(len(typeList), " are resistant to " + type1)
-        #    for i in typeList:
-        #        print(i)
+        return typeList
+
+    def teraTypeStrengths(self,type1):
+        #Everything teraType strong against, deals super effective damage
+        types = pokemonTypeWeakness.TypeWeakness()
+        typeList = []
+        #Need to work on for loop. Get all values of the tera type > 1 on all types plus dual types.
+        for i in self.typesList:
+            #check how does type1 peform against all mono types
+            t1 = getattr(types, i.lower())
+            if t1(i) > 1 and i not in typeList:
+                typeList.append(i)
+            #check how does type1 perform against all dual types
+            for j in self.typesList:
+                t2 = getattr(types, j.lower())
+                dualType = i+"/"+j
+                if(t1(type1)*t2(type1) > 1 and dualType not in typeList and i != j):
+                    typeList.append(dualType)
         return typeList
 
     def dualTypeStrengths(self,type1,type2,damage1=0.5,damage2=0.5):
@@ -104,85 +109,67 @@ class DualType(object):
             for j in self.typesList:
                 t2 = getattr(types, j.lower())
                 dualType = i+"/"+j
-                if(t1(type1)*t2(type1) <= damage1 and t1(type2)*t2(type2) <=damage2 and dualType not in typeList and i != j):
+                if(t1(type1)*t2(type1)<=damage1 and t1(type2)*t2(type2)<=damage2 and dualType not in typeList and i!=j):
                     typeList.append(dualType)
-        #if(self.debug):
-        #    print(len(typeList), " are resistant to " + type1 + "/" + type2)
-        #    for i in typeList:
-        #        print(i)
+                elif(t1(type2)*t2(type2)<=damage1 and t1(type1)*t2(type1)<=damage2 and dualType not in typeList and i!=j):
+                    typeList.append(dualType)
+        #for i in typeList:
+        #    print(i)
         return typeList
     
 
     def dualTypeCounter(self,type1,type2,damage1,damage2):
         #Want to have super effetive moves (2,4 times damage) 
         #Want to avoid taking super effective moves (2,4 times damage)
-        #EX: If enemy pokemon is Dark/Steel type then want to choose:
-        #Fighting, Fire, or Ground Pokemon moves or typing to be super effective or have tera typing of this.
-        #Want to avoid on the other hand:
-        #Dozens of type combinations that I won't list because there are too many
-        #Ideally create a list of pokemon that take neutral damage or less and deal super effective damage.
-        counterDefense = self.dualTypeStrengths(type1,type2,damage1,damage2)
-        counterOffense = self.dualTypeSuperEffective(type1,type2)
+        if type2 != "":
+            counterDefense = self.dualTypeStrengths(type1,type2,damage1,damage2)
+            counterOffense = self.dualTypeSuperEffective(type1,type2)
+        else:
+            counterDefense = self.monoTypeStrengths(type1,damage1)
+            counterOffense = self.monoTypeSuperEffective(type1)
         combo = []
         for i in counterOffense:
             if i in counterDefense and i not in combo:
                 combo.append(i)
-        #if (self.debug):
-        #    print()
-        #    print(len(combo), "types that are super effective and resistant against " + type1+"/"+type2)
-        #    for i in combo:
-        #        print(i)
         return combo
 
-    def avoidTeraBlast(self,type1,type2,teratype,damage1,damage2):
-        pass
+    def avoidTeraType(self,combo,teraType,damage):
+        #Get a list of all damage the teraType deals against other types
+        #To avoid tera type we need to get a list of all combinations that the type isn't effective against
+        #Then compare the combo list of all types resistant to the base type to the avoid tera type
+        teraBlast = self.monoTypeStrengths(teraType,damage[0])
+        teraStrength = self.teraTypeStrengths(teraType)
+        avoidTeraBlast = []
+        for i in combo:
+            for j in teraBlast:
+                if i in j and i not in avoidTeraBlast:
+                    avoidTeraBlast.append(i)
+        for i in avoidTeraBlast:
+            for j in teraStrength:
+                if i == j:
+                    avoidTeraBlast.remove(j)
+        return avoidTeraBlast
 
-    def teraTypeCounter(self,pokemon,teraType,damage,avoidTeraType=False):
+    def teraTypeCounter(self,pokemon,teraType,damage):
         #type1/type2 is the types to defend against
         #teraType is the type we want to be most effective against
-        #combine this that means we want the best defense against type1/type2, yet be strongest against teraType
         type1 = pokemon[2]
         type2 = pokemon[3]
         damage1 = damage[0]
         damage2 = damage[1]
+        #if there isn't a second type, check what the mono typing is not strong against
         if type2 == "":
-            counterDefense = self.monoTypeStrengths(type1,damage1,damage2)
+            counterDefense = self.monoTypeStrengths(type1,damage1)
+        #Otherwise check what both typings are not strong against
         else:
             counterDefense = self.dualTypeStrengths(type1,type2,damage1,damage2)
+        #Next we want to get a list of pokemon typings that will be super effective against the tera type
         counterOffense = self.monoTypeSuperEffective(teraType)
+        #Now combine the two for most defensive+super effective against tera pokemon type
         combo = []
         for i in counterOffense:
             if i in counterDefense and i not in combo:
                 combo.append(i)
-        #Add check case for when avoidTeraBlast is true
-        #remove the pokemon from the combo list that are weak to the tera typing
-        #Return the new result of the pokemon list
-        if avoidTeraType:
-            index = 0
-            teraBlast = self.dualTypeWeakness(teraType,"")
-            avoidTeraBlast = []
-            for i in range(len(teraBlast)-1):
-                if type(teraBlast[i]) !=  str and teraBlast[i] > 1:
-                    avoidTeraBlast.append(teraBlast[i-1])
-            tmp = []
-            for i in avoidTeraBlast:
-                for j in combo:
-                    if i in j:
-                        tmp.append(j)
-
-            for i in tmp:
-                if i in combo:
-                    combo.remove(i)
-        if(self.debug):
-            print()
-            if (type2 == ""):
-                print(len(combo), "types that are super effective against tera " + teraType+ " and resistant to base type " + type1)
-                for i in combo:
-                    print(i)
-            else:
-                print(len(combo), "types that are super effective against tera " + teraType+ " and resistant to base type " + type1+"/"+type2)
-                for i in combo:
-                    print(i)
         return combo
 
 def main():
@@ -241,14 +228,15 @@ def main():
             damage1 = 0
             damage2 = 0
         if teraType != "":
-            dualType.teraTypeCounter(["","",type1,type2],teraType,[damage1,damage2])
+            selection = dualType.teraTypeCounter(["","",type1,type2],teraType,[damage1,damage2],True)
+            for i in selection:
+                print(i)
         else:
-            if(type1 == ""):
-                type1 = type2
-                type2 = ""
-            dualType.dualTypeCounter(type1,type2,damage1,damage2)
+            selection = dualType.dualTypeCounter(type1,type2,damage1,damage2)
+            for i in selection:
+                print(i)
 
-if __name__=="__main__":
-    main()
+#if __name__=="__main__":
+#    main()
     #dualTypes = DualType()
     #dualTypes.dualTypeWeakness("Dark","Ice")
